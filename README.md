@@ -135,13 +135,13 @@ Journey is a travel journal app that allows users to document their travel exper
 ## Wireframes
 
 - Dashboard Screen  
-  ![Dashboard wireframe](wireframes/dashboard_wireframe.png)
+  <img src="wireframes/dashboard_wireframe.png" alt="Dashboard wireframe" width="320" />
 
 - Journal Editor Screen  
-  ![Journal editor wireframe](wireframes/journal_editor_wireframe.png)
+  <img src="wireframes/journal_editor_wireframe.png" alt="Journal editor wireframe" width="320" />
 
 - Map View Screen  
-  ![Map view wireframe](wireframes/map_view_wireframe.png)
+  <img src="wireframes/map_view_wireframe.png" alt="Map view wireframe" width="320" />
 
 ### [BONUS] Digital Wireframes & Mockups
 
@@ -159,37 +159,8 @@ Journey is a travel journal app that allows users to document their travel exper
 
 ### Models
 
-**Journal**
 
-| Property      | Type    | Description                                  |
-|---------------|---------|----------------------------------------------|
-| id            | String  | unique id for the journal entry (default field) |
-| title         | String  | title of the journal entry                   |
-| description   | String  | main content/description of the journal      |
-| image         | Data    | uploaded image data                          |
-| date          | Date    | date when the journal was created            |
-| location      | String  | location name/address                        |
-| gpsLatitude   | Double  | GPS latitude coordinate                      |
-| gpsLongitude  | Double  | GPS longitude coordinate                     |
-| createdAt     | Date    | timestamp when entry was created             |
-| updatedAt     | Date    | timestamp when entry was last updated        |
 
-**Optional Models (for future features)**
-
-**Tag**
-
-| Property | Type   | Description                                  |
-|----------|--------|----------------------------------------------|
-| id       | String | unique id for the tag                        |
-| name     | String | tag name                                     |
-
-**User** (if Back4App integration is added)
-
-| Property | Type   | Description                                  |
-|----------|--------|----------------------------------------------|
-| id       | String | unique id for the user                      |
-| username | String | user's username                              |
-| email    | String | user's email address                         |                          
 
 
 
@@ -197,22 +168,3 @@ Journey is a travel journal app that allows users to document their travel exper
 
 ### Networking
 
-**Local Storage (Primary)**
-- Using Realm/SwiftData for local data persistence
-- No network requests required for core functionality
-
-**Optional: Back4App Integration (Future Feature)**
-
-- [ ] [**Dashboard Screen**]
-  * `[GET] /parse/classes/Journal` - Retrieve all journal entries for the user
-  * `[GET] /parse/classes/Journal?where={"title":{"$regex":"SEARCH_TERM"}}` - Search journals by title
-
-- [ ] [**Journal Editor Screen**]
-  * `[POST] /parse/classes/Journal` - Create a new journal entry
-  * `[PUT] /parse/classes/Journal/{objectId}` - Update an existing journal entry
-  * `[DELETE] /parse/classes/Journal/{objectId}` - Delete a journal entry
-
-- [ ] [**User Authentication**] (if profiles are added)
-  * `[POST] /parse/users` - Register a new user
-  * `[POST] /parse/login` - Login user
-  * `[GET] /parse/users/me` - Get current user information
