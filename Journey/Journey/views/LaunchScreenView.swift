@@ -32,7 +32,7 @@ struct LaunchScreenView: View {
         /* gradient background matching app theme */
         AppGradients.primary
           .ignoresSafeArea()
-        VStack() {
+        VStack(spacing: 0) {
           /* app icon */
           Image("favicon")
             .resizable()
