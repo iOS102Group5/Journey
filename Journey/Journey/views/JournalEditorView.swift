@@ -1,0 +1,285 @@
+//
+//  JournalEditorView.swift
+//  Journey
+//
+//  Created by Camposm on 11/12/25.
+//
+
+/**
+ * JournalEditorView - Create and edit journal entries
+ *
+ * This view handles both creating new journals and editing existing ones.
+ * It includes a complete form with photo upload, text fields, date picker,
+ * and automatic location fetching via GPS.
+ *
+ * TODO: Implement Parse database save/delete in handleSave() and handleDelete()
+ */
+
+import SwiftUI
+import PhotosUI
+import CoreLocation
+
+struct JournalEditorView: View {
+  /* environment value to dismiss this view (like a back button) */
+  @Environment(\.dismiss) var dismiss
+
+  /* location manager observes GPS location changes */
+  @StateObject private var locationManager = LocationManager()
+
+  /* journal being edited (nil if creating new journal) */
+  let existingJournal: Journal?
+
+  /* form field state variables */
+  @State private var title: String = ""
+  @State private var content: String = ""
+  @State private var selectedDate: Date = Date()
+  @State private var location: String = ""
+  @State private var selectedImage: PhotosPickerItem?
+  @State private var imageData: Data?
+  @State private var showDatePicker = false
+  @State private var showDeleteAlert = false
+
+  /**
+   * isManualLocationRequest tracks whether the user clicked the location button.
+   *
+   * Why needed?
+   * - New journals auto-fetch location on appear
+   * - Editing journals should NOT auto-update location
+   * - But users can manually click location button while editing
+   *
+   * Flow:
+   * 1. User clicks location button → isManualLocationRequest = true
+   * 2. LocationManager fetches location → locationString updates
+   * 3. onChange detects change → checks if manual OR new journal
+   * 4. If yes, updates location field → resets isManualLocationRequest = false
+   */
+  @State private var isManualLocationRequest = false
+
+  /* computed property to check if we're editing vs creating */
+  var isEditing: Bool {
+    existingJournal != nil
+  }
+
+  /**
+   * Custom initializer to support both create and edit modes
+   *
+   * Usage:
+   *   JournalEditorView() // creates new journal
+   *   JournalEditorView(journal: existingJournal) // edits existing journal
+   *
+   * Why custom init?
+   * We need to initialize @State variables with values from existingJournal.
+   * SwiftUI doesn't auto-initialize @State from parameters, so we do it manually.
+   *
+   * Note: _title (with underscore) accesses the State wrapper directly
+   * to set initial value without triggering a view update.
+   */
+  init(journal: Journal? = nil) {
+    self.existingJournal = journal
+    /* initialize state from existing journal if editing */
+    if let journal = journal {
+      _title = State(initialValue: journal.title ?? "")
+      _content = State(initialValue: journal.content ?? "")
+      _selectedDate = State(initialValue: journal.createdAt ?? Date())
+      _location = State(initialValue: journal.location ?? "")
+    }
+  }
+  
+  private func handleSave() {
+    /* TODO: save journal to parse db */
+    print("Saving journal: \(title)")
+    dismiss()
+  }
+
+  private func handleDelete() {
+    /* TODO: delete journal from parse db */
+    print("Deleting journal: \(title)")
+    dismiss()
+  }
+  
+  var body: some View {
+    VStack(spacing: 0) {
+      /* custom header */
+      AppHeader(text: isEditing ? (existingJournal?.title ?? "Edit Journal") : "New Journal", showIcon: false, paddingStyle: .bottom)
+      
+      ScrollView {
+        VStack(spacing: AppSpacing.medium) {
+          /* photo upload card */
+          PhotoUploadCard(imageData: $imageData, selectedImage: $selectedImage)
+          
+          VStack(spacing: AppSpacing.medium) {
+            /* title field */
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+              Text("Title")
+                .font(.system(size: AppFontSize.body))
+                .fontWeight(.semibold)
+              TextField("Enter journal title", text: $title)
+                .padding(AppSpacing.small)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
+            }
+            
+            /* date field */
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+              Text("Date")
+                .font(.system(size: AppFontSize.body))
+                .fontWeight(.semibold)
+              Button(action: {
+                showDatePicker.toggle()
+              }) {
+                HStack {
+                  Text(selectedDate, style: .date)
+                    .foregroundColor(.primary)
+                  Spacer()
+                  Image(systemName: "calendar")
+                    .foregroundColor(.blue)
+                }
+                .padding(AppSpacing.small)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
+              }
+              if showDatePicker {
+                DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                  .datePickerStyle(.graphical)
+              }
+            }
+            
+            /* location field */
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+              Text("Location")
+                .font(.system(size: AppFontSize.body))
+                .fontWeight(.semibold)
+              HStack {
+                TextField("Enter location", text: $location)
+                Button(action: {
+                  isManualLocationRequest = true
+                  locationManager.requestLocation()
+                }) {
+                  Image(systemName: "location.fill")
+                    .foregroundColor(.blue)
+                }
+              }
+              .padding(AppSpacing.small)
+              .background(Color(.systemGray6))
+              .cornerRadius(8)
+            }
+            
+            /* journal content */
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+              Text("Journal Entry")
+                .font(.system(size: AppFontSize.body))
+                .fontWeight(.semibold)
+              ZStack(alignment: .topLeading) {
+                TextEditor(text: $content)
+                  .frame(minHeight: 200)
+                  .padding(AppSpacing.small)
+                  .background(Color(.systemGray6))
+                  .cornerRadius(8)
+                  .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                      .stroke(Color(.systemGray4), lineWidth: 1)
+                  )
+
+                /* placeholder */
+                if content.isEmpty {
+                  Text("Write your journal entry here...")
+                    .foregroundColor(Color(.placeholderText))
+                    .padding(.horizontal, AppSpacing.small + 5)
+                    .padding(.vertical, AppSpacing.small + 8)
+                    .allowsHitTesting(false)
+                }
+              }
+            }
+            
+            /* action buttons */
+            if isEditing {
+              HStack(spacing: AppSpacing.medium) {
+                /* delete button */
+                Button(action: {
+                  showDeleteAlert = true
+                }) {
+                  HStack {
+                    Image(systemName: "trash.fill")
+                      .font(.system(size: 16))
+                    Text("Delete")
+                      .fontWeight(.semibold)
+                  }
+                  .foregroundColor(.white)
+                  .padding(AppSpacing.small)
+                  .frame(maxWidth: .infinity)
+                  .background(Color.red)
+                  .cornerRadius(10)
+                }
+
+                /* save button */
+                GradientButton(text: "Save", icon: "checkmark", fullWidth: true, action: handleSave)
+              }
+            } else {
+              /* just save button for new journals */
+              GradientButton(text: "Create Journal", icon: "plus", fullWidth: true, action: handleSave)
+            }
+          }
+          .padding(.horizontal, AppSpacing.medium)
+        }
+        .padding(.top, AppSpacing.small)
+        .padding(.bottom, AppSpacing.medium)
+      }
+    }
+    .navigationBarBackButtonHidden(true)
+    .toolbar {
+      ToolbarItem(placement: .navigationBarLeading) {
+        Button(action: {
+          dismiss()
+        }) {
+          HStack(spacing: 4) {
+            Image(systemName: "chevron.left")
+              .font(.system(size: 16, weight: .semibold))
+            Text("Cancel")
+          }
+          .foregroundColor(.blue)
+        }
+      }
+    }
+    .alert("Delete Journal", isPresented: $showDeleteAlert) {
+      Button("Cancel", role: .cancel) { }
+      Button("Delete", role: .destructive) {
+        handleDelete()
+      }
+    } message: {
+      Text("Are you sure you want to delete this journal? This action cannot be undone.")
+    }
+    .onAppear {
+      /* auto-fetch location for new journals */
+      if !isEditing {
+        locationManager.requestLocation()
+      }
+    }
+    .onChange(of: locationManager.locationString) { oldValue, newValue in
+      /* update location field when location is fetched */
+      if let newLocation = newValue {
+        /* update if manual request or auto-fetch for new journal */
+        if isManualLocationRequest || !isEditing {
+          location = newLocation
+          isManualLocationRequest = false
+        }
+      }
+    }
+  }
+}
+
+#Preview {
+  /* preview for new journal */
+  JournalEditorView()
+}
+
+#Preview("Editing Existing") {
+  /* preview for editing existing journal */
+  JournalEditorView(journal: {
+    var journal = Journal()
+    journal.title = "My Trip to Paris"
+    journal.createdAt = Date()
+    journal.location = "Paris, France"
+    journal.content = "Today was an amazing day exploring the Eiffel Tower and enjoying French cuisine."
+    return journal
+  }())
+}
