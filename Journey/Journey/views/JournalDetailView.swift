@@ -14,13 +14,62 @@ struct JournalDetailView: View {
   let onDelete: () -> Void
 
   @State private var showDeleteAlert = false
+  @State private var isReadingMode = false
+
+  private var wordCount: Int {
+    guard let content = journal.content else { return 0 }
+    let words = content.components(separatedBy: .whitespacesAndNewlines)
+    return words.filter { !$0.isEmpty }.count
+  }
+
+  private var characterCount: Int {
+    return journal.content?.count ?? 0
+  }
+
+  private var readingTime: Int {
+    /* average reading speed is 200-250 words per minute, using 225 */
+    return max(1, Int(ceil(Double(wordCount) / 225.0)))
+  }
 
   var body: some View {
     NavigationStack {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
+          /* reading mode title (shown when hero is hidden) */
+          if isReadingMode {
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+              Text(journal.title ?? "Untitled")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.primary)
+
+              HStack(spacing: AppSpacing.medium) {
+                if let date = journal.createdAt {
+                  HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                    Text(date, style: .date)
+                  }
+                  .font(.system(size: AppFontSize.caption))
+                  .foregroundColor(.secondary)
+                }
+
+                if let location = journal.location {
+                  HStack(spacing: 4) {
+                    Image(systemName: "location.fill")
+                    Text(location)
+                  }
+                  .font(.system(size: AppFontSize.caption))
+                  .foregroundColor(.secondary)
+                }
+              }
+            }
+            .padding(.horizontal, AppSpacing.medium)
+            .padding(.top, AppSpacing.medium)
+            .padding(.bottom, AppSpacing.small)
+          }
+
           /* hero image with title overlay - extends under toolbar */
-          ZStack(alignment: .bottomLeading) {
+          if !isReadingMode {
+            ZStack(alignment: .bottomLeading) {
             /* background image */
             Group {
               if let imageUrl = journal.thumbnailImage {
@@ -94,20 +143,48 @@ struct JournalDetailView: View {
               }
             }
             .padding(AppSpacing.medium)
+            }
+            .frame(maxWidth: .infinity)
           }
-          .frame(maxWidth: .infinity)
 
           VStack(alignment: .leading, spacing: AppSpacing.medium) {
+
+            /* reading statistics */
+            HStack(spacing: AppSpacing.large) {
+              HStack(spacing: 4) {
+                Image(systemName: "book")
+                  .font(.system(size: 12))
+                Text("\(readingTime) min read")
+                  .font(.system(size: 13))
+              }
+
+              HStack(spacing: 4) {
+                Image(systemName: "text.word.spacing")
+                  .font(.system(size: 12))
+                Text("\(wordCount) words")
+                  .font(.system(size: 13))
+              }
+
+              HStack(spacing: 4) {
+                Image(systemName: "character")
+                  .font(.system(size: 12))
+                Text("\(characterCount) chars")
+                  .font(.system(size: 13))
+              }
+            }
+            .foregroundColor(.secondary)
+            .padding(.bottom, AppSpacing.small)
 
             /* content */
             if let content = journal.content {
               Text(content)
-                .font(.system(size: AppFontSize.body))
+                .font(.system(size: isReadingMode ? 20 : AppFontSize.body))
+                .lineSpacing(isReadingMode ? 8 : 4)
                 .foregroundColor(.primary)
             }
 
-            /* map view */
-            if journal.location != nil {
+            /* map view (hidden in reading mode) */
+            if journal.location != nil && !isReadingMode {
               MapView(locationName: journal.location)
                 .padding(.top, AppSpacing.small)
             }
@@ -117,14 +194,15 @@ struct JournalDetailView: View {
           .padding(.bottom, AppSpacing.medium)
         }
       }
-      .ignoresSafeArea(edges: .top)
+      .ignoresSafeArea(edges: isReadingMode ? [] : .top)
       .toolbar {
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: {
-            dismiss()
-            onEdit()
+            withAnimation(.spring(response: 0.3)) {
+              isReadingMode.toggle()
+            }
           }) {
-            Image(systemName: "pencil")
+            Image(systemName: isReadingMode ? "book.fill" : "book")
               .font(.system(size: 18))
               .foregroundColor(.primary)
               .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
@@ -132,15 +210,30 @@ struct JournalDetailView: View {
           }
         }
 
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Button(action: {
-            showDeleteAlert = true
-          }) {
-            Image(systemName: "trash")
-              .font(.system(size: 18))
-              .foregroundColor(.red)
-              .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
-              .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
+        if !isReadingMode {
+          ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: {
+              dismiss()
+              onEdit()
+            }) {
+              Image(systemName: "pencil")
+                .font(.system(size: 18))
+                .foregroundColor(.primary)
+                .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
+                .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
+            }
+          }
+
+          ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: {
+              showDeleteAlert = true
+            }) {
+              Image(systemName: "trash")
+                .font(.system(size: 18))
+                .foregroundColor(.red)
+                .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
+                .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
+            }
           }
         }
       }
