@@ -111,29 +111,6 @@ struct JournalDetailView: View {
               MapView(locationName: journal.location)
                 .padding(.top, AppSpacing.small)
             }
-
-            /* action buttons */
-            HStack(spacing: AppSpacing.medium) {
-              Button(action: {
-                showDeleteAlert = true
-              }) {
-                HStack {
-                  Image(systemName: "trash.fill")
-                  Text("Delete")
-                    .fontWeight(.semibold)
-                }
-                .foregroundColor(.white)
-                .padding(AppSpacing.small)
-                .frame(maxWidth: .infinity)
-                .background(Color.red)
-                .cornerRadius(10)
-              }
-
-              GradientButton(text: "Edit", icon: "pencil", fullWidth: true, action: {
-                dismiss()
-                onEdit()
-              })
-            }
           }
           .padding(.horizontal, AppSpacing.medium)
           .padding(.top, AppSpacing.large)
@@ -141,21 +118,32 @@ struct JournalDetailView: View {
         }
       }
       .ignoresSafeArea(edges: .top)
-//      .navigationTitle(journal.title ?? "Journal")
-//      .navigationBarTitleDisplayMode(.automatic)
-//      .toolbar {
-//        ToolbarItem(placement: .navigationBarTrailing) {
-//          Button(action: {
-//            dismiss()
-//          }) {
-//            Text("Close").foregroundColor(.red)
-////            Image(systemName: "xmark.circle.fill")
-////              .font(.system(size: 28))
-////              .foregroundColor(.white)
-////              .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
-//          }
-//        }
-//      }
+      .toolbar {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button(action: {
+            dismiss()
+            onEdit()
+          }) {
+            Image(systemName: "pencil")
+              .font(.system(size: 18))
+              .foregroundColor(.primary)
+              .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
+              .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
+          }
+        }
+
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button(action: {
+            showDeleteAlert = true
+          }) {
+            Image(systemName: "trash")
+              .font(.system(size: 18))
+              .foregroundColor(.red)
+              .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
+              .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
+          }
+        }
+      }
       .alert("Delete Journal", isPresented: $showDeleteAlert) {
         Button("Cancel", role: .cancel) { }
         Button("Delete", role: .destructive) {
