@@ -11,7 +11,6 @@
 		3DD555A12EBC3E4400F8C4E2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD555A02EBC3E4400F8C4E2 /* ContentView.swift */; };
 		3DD555A32EBC3E4900F8C4E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3DD555A22EBC3E4900F8C4E2 /* Assets.xcassets */; };
 		3DD555A62EBC3E4900F8C4E2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3DD555A52EBC3E4900F8C4E2 /* Preview Assets.xcassets */; };
-		72F5D8782EC4B33900A7B529 /* ParseSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 72F5D8772EC4B33900A7B529 /* ParseSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,7 +46,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				72F5D8782EC4B33900A7B529 /* ParseSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,7 +146,6 @@
 			);
 			mainGroup = 3DD555922EBC3E4300F8C4E2;
 			packageReferences = (
-				72F5D8762EC4B33900A7B529 /* XCRemoteSwiftPackageReference "Parse-Swift" */,
 			);
 			productRefGroup = 3DD5559C2EBC3E4400F8C4E2 /* Products */;
 			projectDirPath = "";
@@ -389,25 +386,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		72F5D8762EC4B33900A7B529 /* XCRemoteSwiftPackageReference "Parse-Swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/parse-community/Parse-Swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.14.2;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		72F5D8772EC4B33900A7B529 /* ParseSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 72F5D8762EC4B33900A7B529 /* XCRemoteSwiftPackageReference "Parse-Swift" */;
-			productName = ParseSwift;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3DD555932EBC3E4300F8C4E2 /* Project object */;
 }
