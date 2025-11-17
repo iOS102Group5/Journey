@@ -27,6 +27,12 @@ struct JournalEditorView: View {
   /* journal being edited (nil if creating new journal) */
   let existingJournal: Journal?
 
+  /* callback when journal is saved */
+  let onSave: ((Journal) -> Void)?
+
+  /* data manager for local storage */
+  private let dataManager = JournalDataManager.shared
+
   /* form field state variables */
   @State private var title: String = ""
   @State private var content: String = ""
@@ -72,24 +78,60 @@ struct JournalEditorView: View {
    * Note: _title (with underscore) accesses the State wrapper directly
    * to set initial value without triggering a view update.
    */
-  init(journal: Journal? = nil) {
+  init(journal: Journal? = nil, onSave: ((Journal) -> Void)? = nil) {
     self.existingJournal = journal
+    self.onSave = onSave
     /* initialize state from existing journal if editing */
     if let journal = journal {
       _title = State(initialValue: journal.title ?? "")
       _content = State(initialValue: journal.content ?? "")
-      _selectedDate = State(initialValue: journal.createdAt ?? Date())
+      _selectedDate = State(initialValue: journal.createdAt)
       _location = State(initialValue: journal.location ?? "")
     }
   }
   
   private func handleSave() {
-    print("Saving journal: \(title)")
+    /* create or update journal */
+    var journal: Journal
+
+    if let existingJournal = existingJournal {
+      /* update existing journal */
+      journal = Journal(
+        id: existingJournal.id,
+        title: title.isEmpty ? nil : title,
+        location: location.isEmpty ? nil : location,
+        content: content.isEmpty ? nil : content,
+        images: nil // TODO: handle image upload
+      )
+      journal.createdAt = existingJournal.createdAt
+      journal.updatedAt = Date()
+    } else {
+      /* create new journal */
+      journal = Journal(
+        title: title.isEmpty ? nil : title,
+        location: location.isEmpty ? nil : location,
+        content: content.isEmpty ? nil : content,
+        images: nil // TODO: handle image upload
+      )
+      journal.createdAt = selectedDate
+    }
+
+    /* save to local storage */
+    dataManager.addOrUpdateJournal(journal)
+
+    /* notify parent */
+    onSave?(journal)
+
+    print("Saved journal: \(title)")
     dismiss()
   }
 
   private func handleDelete() {
-    print("Deleting journal: \(title)")
+    if let journal = existingJournal {
+      dataManager.deleteJournal(withId: journal.id)
+      onSave?(journal) // notify parent to reload
+    }
+    print("Deleted journal: \(title)")
     dismiss()
   }
   
