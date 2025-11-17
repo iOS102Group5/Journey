@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SearchBar: View {
   @Binding var searchText: String
-  let sortAction: () -> Void
+  @Binding var sortOption: JournalSortOption
   let onSearchChange: (String) -> Void
 
   @State private var searchTask: Task<Void, Never>?
@@ -28,9 +28,15 @@ struct SearchBar: View {
             onSearchChange(newValue)
           }
         }
-      SortButton(action: sortAction)
-    }
-    .padding(.horizontal, AppSpacing.medium)
-    .padding(.top, AppSpacing.medium)
+        SortButton(
+          sortOption: $sortOption,
+          onSortChange: {
+            // when user picks a new sort, re-run filterJournals()
+            onSearchChange(searchText)
+          }
+        )
+      }
+      .padding(.horizontal, AppSpacing.medium)
+      .padding(.top, AppSpacing.medium)
   }
 }

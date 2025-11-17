@@ -21,6 +21,33 @@
 
 import SwiftUI
 
+enum JournalSortOption: CaseIterable, Equatable {
+  case dateDescending   // Newest first
+  case dateAscending    // Oldest first
+  case titleAZ          // A → Z
+  case titleZA          // Z → A
+
+  var label: String {
+    switch self {
+    case .dateDescending: return "Date: Newest first"
+    case .dateAscending:  return "Date: Oldest first"
+    case .titleAZ:        return "Title: A → Z"
+    case .titleZA:        return "Title: Z → A"
+    }
+  }
+
+  var shortLabel: String {
+    switch self {
+    case .dateDescending: return "Newest"
+    case .dateAscending:  return "Oldest"
+    case .titleAZ:        return "Title A–Z"
+    case .titleZA:        return "Title Z–A"
+    }
+  }
+}
+
+
+
 struct DashboardView: View {
   @State private var searchText = ""
   @State private var navigateToEditor = false
@@ -28,12 +55,10 @@ struct DashboardView: View {
   @State private var selectedJournal: Journal?
   @State private var journals: [Journal] = []
   @State private var filteredJournals: [Journal] = []
+  @State private var sortOption: JournalSortOption = .dateDescending
 
   private let dataManager = JournalDataManager.shared
 
-  private func handleSort() {
-    /* TODO */
-  }
 
   private func handleNewJournal() {
     selectedJournal = nil
@@ -66,6 +91,29 @@ struct DashboardView: View {
         return titleMatch || locationMatch || contentMatch
       }
     }
+      
+    switch sortOption {
+    case .dateDescending:
+    // newest first
+        filteredJournals.sort { $0.createdAt > $1.createdAt }
+
+    case .dateAscending:
+    // oldest first
+        filteredJournals.sort { $0.createdAt < $1.createdAt }
+
+    case .titleAZ:
+        filteredJournals.sort {
+          ($0.title ?? "")
+            .localizedCaseInsensitiveCompare($1.title ?? "") == .orderedAscending
+        }
+
+    case .titleZA:
+        filteredJournals.sort {
+          ($0.title ?? "")
+            .localizedCaseInsensitiveCompare($1.title ?? "") == .orderedDescending
+        }
+    }
+
     print("Filtered to \(filteredJournals.count) journals")
   }
   
@@ -92,7 +140,7 @@ struct DashboardView: View {
       VStack(spacing: AppSpacing.medium) {
         SearchBar(
           searchText: $searchText,
-          sortAction: handleSort,
+          sortOption: $sortOption,
           onSearchChange: { _ in filterJournals() }
         )
 
