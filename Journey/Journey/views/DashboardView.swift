@@ -16,8 +16,6 @@
  *
  * TODO Items:
  * - Implement handleSort() for sorting journals by date/title
- * - Replace sample journal cards with real data from Parse database
- * - Add loading state while fetching journals from server
  * - Add empty state when no journals exist
  */
 
@@ -28,8 +26,10 @@ struct DashboardView: View {
   @State private var navigateToEditor = false
   @State private var showDetailSheet = false
   @State private var selectedJournal: Journal?
-  @State private var sampleJournals: [Journal] = SAMPLE_JOURNALS
+  @State private var journals: [Journal] = []
   @State private var filteredJournals: [Journal] = []
+
+  private let dataManager = JournalDataManager.shared
 
   private func handleSort() {
     /* TODO */
@@ -41,16 +41,24 @@ struct DashboardView: View {
   }
   
   /**
+   * Load journals from local storage
+   */
+  private func loadJournals() {
+    journals = dataManager.loadJournals()
+    filterJournals()
+  }
+
+  /**
    * Filters journals based on search text
    */
   private func filterJournals() {
     if searchText.isEmpty {
       /* no search text - show all journals */
-      filteredJournals = sampleJournals
+      filteredJournals = journals
     } else {
       /* filter journals that match search text */
       let lowercasedSearch = searchText.lowercased()
-      filteredJournals = sampleJournals.filter { journal in
+      filteredJournals = journals.filter { journal in
         /* check if search text appears in title, location, or content */
         let titleMatch = journal.title?.lowercased().contains(lowercasedSearch) ?? false
         let locationMatch = journal.location?.lowercased().contains(lowercasedSearch) ?? false
@@ -72,8 +80,9 @@ struct DashboardView: View {
 
   private func handleDelete() {
     if let journal = selectedJournal {
-      sampleJournals.removeAll { $0.id == journal.id }
-      filteredJournals.removeAll { $0.id == journal.id }
+      dataManager.deleteJournal(withId: journal.id)
+      loadJournals()
+      showDetailSheet = false
     }
   }
   
@@ -94,9 +103,11 @@ struct DashboardView: View {
       }
       .frame(maxHeight: .infinity)
       .onAppear {
-        filteredJournals = sampleJournals
+        loadJournals()
       }
       .sheet(isPresented: $showDetailSheet) {
+        loadJournals()
+      } content: {
         if let journal = selectedJournal {
           JournalDetailView(
             journal: journal,
@@ -106,7 +117,9 @@ struct DashboardView: View {
         }
       }
       .navigationDestination(isPresented: $navigateToEditor) {
-        JournalEditorView(journal: selectedJournal)
+        JournalEditorView(journal: selectedJournal, onSave: { _ in
+          loadJournals()
+        })
       }
     }
   }

@@ -11,8 +11,6 @@
  * This view handles both creating new journals and editing existing ones.
  * It includes a complete form with photo upload, text fields, date picker,
  * and automatic location fetching via GPS.
- *
- * TODO: Implement Parse database save/delete in handleSave() and handleDelete()
  */
 
 import SwiftUI
@@ -29,6 +27,13 @@ struct JournalEditorView: View {
   /* journal being edited (nil if creating new journal) */
   let existingJournal: Journal?
 
+  /* callback when journal is saved */
+  let onSave: ((Journal) -> Void)?
+
+  /* data manager for local storage */
+  private let dataManager = JournalDataManager.shared
+  private let imageManager = ImageManager.shared
+
   /* form field state variables */
   @State private var title: String = ""
   @State private var content: String = ""
@@ -39,20 +44,7 @@ struct JournalEditorView: View {
   @State private var showDatePicker = false
   @State private var showDeleteAlert = false
 
-  /**
-   * isManualLocationRequest tracks whether the user clicked the location button.
-   *
-   * Why needed?
-   * - New journals auto-fetch location on appear
-   * - Editing journals should NOT auto-update location
-   * - But users can manually click location button while editing
-   *
-   * Flow:
-   * 1. User clicks location button → isManualLocationRequest = true
-   * 2. LocationManager fetches location → locationString updates
-   * 3. onChange detects change → checks if manual OR new journal
-   * 4. If yes, updates location field → resets isManualLocationRequest = false
-   */
+  /* tracks whether the user clicked the location button */
   @State private var isManualLocationRequest = false
 
   /* computed property to check if we're editing vs creating */
@@ -60,40 +52,81 @@ struct JournalEditorView: View {
     existingJournal != nil
   }
 
-  /**
-   * Custom initializer to support both create and edit modes
-   *
-   * Usage:
-   *   JournalEditorView() // creates new journal
-   *   JournalEditorView(journal: existingJournal) // edits existing journal
-   *
-   * Why custom init?
-   * We need to initialize @State variables with values from existingJournal.
-   * SwiftUI doesn't auto-initialize @State from parameters, so we do it manually.
-   *
-   * Note: _title (with underscore) accesses the State wrapper directly
-   * to set initial value without triggering a view update.
-   */
-  init(journal: Journal? = nil) {
+  /* Custom initializer to support both create and edit modes */
+  init(journal: Journal? = nil, onSave: ((Journal) -> Void)? = nil) {
     self.existingJournal = journal
+    self.onSave = onSave
     /* initialize state from existing journal if editing */
     if let journal = journal {
       _title = State(initialValue: journal.title ?? "")
       _content = State(initialValue: journal.content ?? "")
-      _selectedDate = State(initialValue: journal.createdAt ?? Date())
+      _selectedDate = State(initialValue: journal.createdAt)
       _location = State(initialValue: journal.location ?? "")
+
+      /* load existing image if available */
+      if let imageFilename = journal.images?.first,
+         let uiImage = ImageManager.shared.loadImage(filename: imageFilename),
+         let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
+        _imageData = State(initialValue: jpegData)
+      }
     }
   }
   
   private func handleSave() {
-    /* TODO: save journal to parse db */
-    print("Saving journal: \(title)")
+    /* save image if one was selected */
+    var imageFilenames: [String] = []
+
+    if let imageData = imageData {
+      /* save new image */
+      if let filename = imageManager.saveImage(imageData) {
+        imageFilenames.append(filename)
+      }
+    } else if let existingJournal = existingJournal {
+      /* keep existing images if no new image was selected */
+      imageFilenames = existingJournal.images ?? []
+    }
+
+    /* create or update journal */
+    var journal: Journal
+
+    if let existingJournal = existingJournal {
+      /* update existing journal */
+      journal = Journal(
+        id: existingJournal.id,
+        title: title.isEmpty ? nil : title,
+        location: location.isEmpty ? nil : location,
+        content: content.isEmpty ? nil : content,
+        images: imageFilenames.isEmpty ? nil : imageFilenames
+      )
+      journal.createdAt = existingJournal.createdAt
+      journal.updatedAt = Date()
+    } else {
+      /* create new journal */
+      journal = Journal(
+        title: title.isEmpty ? nil : title,
+        location: location.isEmpty ? nil : location,
+        content: content.isEmpty ? nil : content,
+        images: imageFilenames.isEmpty ? nil : imageFilenames
+      )
+      journal.createdAt = selectedDate
+    }
+
+    /* save to local storage */
+    dataManager.addOrUpdateJournal(journal)
+
+    /* notify parent */
+    onSave?(journal)
+
+    print("Saved journal: \(title)")
     dismiss()
   }
 
   private func handleDelete() {
-    /* TODO: delete journal from parse db */
-    print("Deleting journal: \(title)")
+    if let journal = existingJournal {
+      dataManager.deleteJournal(withId: journal.id)
+      onSave?(journal) // notify parent to reload
+    }
+    print("Deleted journal: \(title)")
     dismiss()
   }
   
@@ -164,60 +197,57 @@ struct JournalEditorView: View {
               .cornerRadius(8)
             }
             
-            /* journal content */
+            /* journal content - canvas style */
             VStack(alignment: .leading, spacing: AppSpacing.small) {
               Text("Journal Entry")
                 .font(.system(size: AppFontSize.body))
                 .fontWeight(.semibold)
               ZStack(alignment: .topLeading) {
                 TextEditor(text: $content)
-                  .frame(minHeight: 200)
-                  .padding(AppSpacing.small)
-                  .background(Color(.systemGray6))
-                  .cornerRadius(8)
-                  .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                      .stroke(Color(.systemGray4), lineWidth: 1)
-                  )
+                  .frame(minHeight: 300)
+                  .scrollContentBackground(.hidden)
+                  .background(Color.clear)
+                  .font(.system(size: 16, design: .default))
 
                 /* placeholder */
                 if content.isEmpty {
-                  Text("Write your journal entry here...")
+                  Text("Start writing your thoughts...")
                     .foregroundColor(Color(.placeholderText))
-                    .padding(.horizontal, AppSpacing.small + 5)
-                    .padding(.vertical, AppSpacing.small + 8)
+                    .font(.system(size: 16))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 8)
                     .allowsHitTesting(false)
                 }
               }
             }
-            
-            /* action buttons */
-            if isEditing {
-              HStack(spacing: AppSpacing.medium) {
-                /* delete button */
-                Button(action: {
-                  showDeleteAlert = true
-                }) {
-                  HStack {
-                    Image(systemName: "trash.fill")
-                      .font(.system(size: 16))
-                    Text("Delete")
-                      .fontWeight(.semibold)
-                  }
-                  .foregroundColor(.white)
-                  .padding(AppSpacing.small)
-                  .frame(maxWidth: .infinity)
-                  .background(Color.red)
-                  .cornerRadius(10)
-                }
 
-                /* save button */
-                GradientButton(text: "Save", icon: "checkmark", fullWidth: true, action: handleSave)
-              }
-            } else {
-              /* just save button for new journals */
-              GradientButton(text: "Create Journal", icon: "plus", fullWidth: true, action: handleSave)
-            }
+//            /* action buttons */
+//            if isEditing {
+//              HStack(spacing: AppSpacing.medium) {
+//                /* delete button */
+//                Button(action: {
+//                  showDeleteAlert = true
+//                }) {
+//                  HStack {
+//                    Image(systemName: "trash.fill")
+//                      .font(.system(size: 16))
+//                    Text("Delete")
+//                      .fontWeight(.semibold)
+//                  }
+//                  .foregroundColor(.white)
+//                  .padding(AppSpacing.small)
+//                  .frame(maxWidth: .infinity)
+//                  .background(Color.red)
+//                  .cornerRadius(10)
+//                }
+//
+//                /* save button */
+//                GradientButton(text: "Save", icon: "checkmark", fullWidth: true, action: handleSave)
+//              }
+//            } else {
+//              /* just save button for new journals */
+//              GradientButton(text: "Create Journal", icon: "plus", fullWidth: true, action: handleSave)
+//            }
           }
           .padding(.horizontal, AppSpacing.medium)
         }
@@ -237,6 +267,30 @@ struct JournalEditorView: View {
             Text("Cancel")
           }
           .foregroundColor(.blue)
+        }
+      }
+
+      /* delete button - only show when editing */
+      if isEditing {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button(action: {
+            showDeleteAlert = true
+          }) {
+            Image(systemName: "trash")
+              .font(.system(size: 18))
+              .foregroundColor(.red)
+          }
+        }
+      }
+
+      /* save button */
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Button(action: {
+          handleSave()
+        }) {
+          Image(systemName: "square.and.arrow.down")
+            .font(.system(size: 18))
+            .foregroundColor(.blue)
         }
       }
     }
@@ -274,12 +328,9 @@ struct JournalEditorView: View {
 
 #Preview("Editing Existing") {
   /* preview for editing existing journal */
-  JournalEditorView(journal: {
-    var journal = Journal()
-    journal.title = "My Trip to Paris"
-    journal.createdAt = Date()
-    journal.location = "Paris, France"
-    journal.content = "Today was an amazing day exploring the Eiffel Tower and enjoying French cuisine."
-    return journal
-  }())
+  JournalEditorView(journal: Journal(
+    title: "My Trip to Paris",
+    location: "Paris, France",
+    content: "Today was an amazing day exploring the Eiffel Tower and enjoying French cuisine."
+  ))
 }
