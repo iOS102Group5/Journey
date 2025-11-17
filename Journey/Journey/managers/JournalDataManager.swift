@@ -104,6 +104,14 @@ class JournalDataManager {
    */
   func deleteJournal(withId id: String) {
     var journals = loadJournals()
+
+    /* find the journal and delete its associated images */
+    if let journal = journals.first(where: { $0.id == id }) {
+      if let imageFilenames = journal.images {
+        ImageManager.shared.deleteImages(filenames: imageFilenames)
+      }
+    }
+
     journals.removeAll { $0.id == id }
     saveJournals(journals)
     print("Deleted journal with ID: \(id)")

@@ -16,32 +16,51 @@ struct JournalDetailView: View {
   @State private var showDeleteAlert = false
   
   var body: some View {
-    NavigationStack {
+    NavigationView {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
           /* hero image with title overlay - extends under toolbar */
           ZStack(alignment: .bottomLeading) {
             /* background image */
             Group {
-              if let imageUrl = journal.thumbnailImage {
-                AsyncImage(url: URL(string: imageUrl)) { phase in
-                  switch phase {
-                  case .success(let image):
-                    image
+              if let imageString = journal.thumbnailImage {
+                /* check if it's a url or local file */
+                if imageString.hasPrefix("http://") || imageString.hasPrefix("https://") {
+                  /* remote url */
+                  AsyncImage(url: URL(string: imageString)) { phase in
+                    switch phase {
+                    case .success(let image):
+                      image
+                        .resizable()
+                        .scaledToFill()
+                    case .empty:
+                      Color(.systemGray5)
+                        .overlay(ProgressView())
+                    case .failure:
+                      Color(.systemGray5)
+                        .overlay(
+                          Image(systemName: "photo.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.secondary)
+                        )
+                    @unknown default:
+                      Color(.systemGray5)
+                    }
+                  }
+                } else {
+                  /* local file - load from ImageManager */
+                  if let uiImage = ImageManager.shared.loadImage(filename: imageString) {
+                    Image(uiImage: uiImage)
                       .resizable()
                       .scaledToFill()
-                  case .empty:
-                    Color(.systemGray5)
-                      .overlay(ProgressView())
-                  case .failure:
+                  } else {
+                    /* fallback if image not found */
                     Color(.systemGray5)
                       .overlay(
                         Image(systemName: "photo.fill")
                           .font(.system(size: 40))
                           .foregroundColor(.secondary)
                       )
-                  @unknown default:
-                    Color(.systemGray5)
                   }
                 }
               } else {
@@ -57,7 +76,7 @@ struct JournalDetailView: View {
                 )
               }
             }
-            .frame(height: 350)
+            .frame(height: 280)
             .clipped()
             
             /* gradient overlay for text readability */
@@ -116,7 +135,17 @@ struct JournalDetailView: View {
         }
       }
       .ignoresSafeArea(edges: .top)
+      .navigationBarTitleDisplayMode(.inline)
       .toolbar {
+//        ToolbarItem(placement: .navigationBarLeading) {
+//          Button(action: {
+//            dismiss()
+//          }) {
+//            Image(systemName: "xmark.circle.fill")
+//              .font(.system(size: 24))
+//              .foregroundColor(.secondary)
+//          }
+//        }
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: {
             dismiss()
@@ -125,11 +154,9 @@ struct JournalDetailView: View {
             Image(systemName: "pencil")
               .font(.system(size: 18))
               .foregroundColor(.primary)
-              .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
-              .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
           }
         }
-        
+
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: {
             showDeleteAlert = true
@@ -137,8 +164,6 @@ struct JournalDetailView: View {
             Image(systemName: "trash")
               .font(.system(size: 18))
               .foregroundColor(.red)
-              .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
-              .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
           }
         }
       }
@@ -152,5 +177,6 @@ struct JournalDetailView: View {
         Text("Are you sure you want to delete this journal? This action cannot be undone.")
       }
     }
+    .navigationViewStyle(.stack)
   }
 }

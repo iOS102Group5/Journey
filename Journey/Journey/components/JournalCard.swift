@@ -23,7 +23,7 @@ struct JournalCard: View {
       /* background image layer */
       Group {
         if let imageString = journal.thumbnailImage {
-          /* check if it's a url or local asset */
+          /* check if it's a url or local file */
           if imageString.hasPrefix("http://") || imageString.hasPrefix("https://") {
             /* remote url - use asyncimage */
             AsyncImage(url: URL(string: imageString)) { phase in
@@ -53,10 +53,20 @@ struct JournalCard: View {
               }
             }
           } else {
-            /* local asset name */
-            Image(imageString)
-              .resizable()
-              .scaledToFill()
+            /* local file - load from ImageManager */
+            if let uiImage = ImageManager.shared.loadImage(filename: imageString) {
+              Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+            } else {
+              /* fallback if image not found */
+              Color(.systemGray5)
+                .overlay(
+                  Image(systemName: "photo.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(.white.opacity(0.5))
+                )
+            }
           }
         } else {
           /* placeholder background */

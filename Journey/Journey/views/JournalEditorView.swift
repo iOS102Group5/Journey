@@ -32,6 +32,7 @@ struct JournalEditorView: View {
 
   /* data manager for local storage */
   private let dataManager = JournalDataManager.shared
+  private let imageManager = ImageManager.shared
 
   /* form field state variables */
   @State private var title: String = ""
@@ -43,20 +44,7 @@ struct JournalEditorView: View {
   @State private var showDatePicker = false
   @State private var showDeleteAlert = false
 
-  /**
-   * isManualLocationRequest tracks whether the user clicked the location button.
-   *
-   * Why needed?
-   * - New journals auto-fetch location on appear
-   * - Editing journals should NOT auto-update location
-   * - But users can manually click location button while editing
-   *
-   * Flow:
-   * 1. User clicks location button → isManualLocationRequest = true
-   * 2. LocationManager fetches location → locationString updates
-   * 3. onChange detects change → checks if manual OR new journal
-   * 4. If yes, updates location field → resets isManualLocationRequest = false
-   */
+  /* tracks whether the user clicked the location button */
   @State private var isManualLocationRequest = false
 
   /* computed property to check if we're editing vs creating */
@@ -64,20 +52,7 @@ struct JournalEditorView: View {
     existingJournal != nil
   }
 
-  /**
-   * Custom initializer to support both create and edit modes
-   *
-   * Usage:
-   *   JournalEditorView() // creates new journal
-   *   JournalEditorView(journal: existingJournal) // edits existing journal
-   *
-   * Why custom init?
-   * We need to initialize @State variables with values from existingJournal.
-   * SwiftUI doesn't auto-initialize @State from parameters, so we do it manually.
-   *
-   * Note: _title (with underscore) accesses the State wrapper directly
-   * to set initial value without triggering a view update.
-   */
+  /* Custom initializer to support both create and edit modes */
   init(journal: Journal? = nil, onSave: ((Journal) -> Void)? = nil) {
     self.existingJournal = journal
     self.onSave = onSave
@@ -87,10 +62,30 @@ struct JournalEditorView: View {
       _content = State(initialValue: journal.content ?? "")
       _selectedDate = State(initialValue: journal.createdAt)
       _location = State(initialValue: journal.location ?? "")
+
+      /* load existing image if available */
+      if let imageFilename = journal.images?.first,
+         let uiImage = ImageManager.shared.loadImage(filename: imageFilename),
+         let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
+        _imageData = State(initialValue: jpegData)
+      }
     }
   }
   
   private func handleSave() {
+    /* save image if one was selected */
+    var imageFilenames: [String] = []
+
+    if let imageData = imageData {
+      /* save new image */
+      if let filename = imageManager.saveImage(imageData) {
+        imageFilenames.append(filename)
+      }
+    } else if let existingJournal = existingJournal {
+      /* keep existing images if no new image was selected */
+      imageFilenames = existingJournal.images ?? []
+    }
+
     /* create or update journal */
     var journal: Journal
 
@@ -101,7 +96,7 @@ struct JournalEditorView: View {
         title: title.isEmpty ? nil : title,
         location: location.isEmpty ? nil : location,
         content: content.isEmpty ? nil : content,
-        images: nil // TODO: handle image upload
+        images: imageFilenames.isEmpty ? nil : imageFilenames
       )
       journal.createdAt = existingJournal.createdAt
       journal.updatedAt = Date()
@@ -111,7 +106,7 @@ struct JournalEditorView: View {
         title: title.isEmpty ? nil : title,
         location: location.isEmpty ? nil : location,
         content: content.isEmpty ? nil : content,
-        images: nil // TODO: handle image upload
+        images: imageFilenames.isEmpty ? nil : imageFilenames
       )
       journal.createdAt = selectedDate
     }
