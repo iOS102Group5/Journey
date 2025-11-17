@@ -91,16 +91,14 @@ struct JournalCard: View {
           .lineLimit(1)
         /* calendar and location details*/
         HStack(spacing: 12) {
-          /* if createdAt is defined, render it */
-          if let createdAt = journal.createdAt {
-            HStack(spacing: 4) {
-              Image(systemName: "calendar")
-                .font(.system(size: 13))
-              Text(createdAt, style: .date)
-                .font(.system(size: 13))
-            }
+          /* render journal date */
+          HStack(spacing: 4) {
+            Image(systemName: "calendar")
+              .font(.system(size: 13))
+            Text(journal.createdAt, style: .date)
+              .font(.system(size: 13))
           }
-          /* if location is defined, render it */
+          /* render journal location if applicable */
           if let location = journal.location {
             HStack(spacing: 4) {
               Image(systemName: "location.fill")

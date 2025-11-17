@@ -11,8 +11,6 @@
  * This view handles both creating new journals and editing existing ones.
  * It includes a complete form with photo upload, text fields, date picker,
  * and automatic location fetching via GPS.
- *
- * TODO: Implement Parse database save/delete in handleSave() and handleDelete()
  */
 
 import SwiftUI
@@ -86,13 +84,11 @@ struct JournalEditorView: View {
   }
   
   private func handleSave() {
-    /* TODO: save journal to parse db */
     print("Saving journal: \(title)")
     dismiss()
   }
 
   private func handleDelete() {
-    /* TODO: delete journal from parse db */
     print("Deleting journal: \(title)")
     dismiss()
   }
@@ -274,12 +270,9 @@ struct JournalEditorView: View {
 
 #Preview("Editing Existing") {
   /* preview for editing existing journal */
-  JournalEditorView(journal: {
-    var journal = Journal()
-    journal.title = "My Trip to Paris"
-    journal.createdAt = Date()
-    journal.location = "Paris, France"
-    journal.content = "Today was an amazing day exploring the Eiffel Tower and enjoying French cuisine."
-    return journal
-  }())
+  JournalEditorView(journal: Journal(
+    title: "My Trip to Paris",
+    location: "Paris, France",
+    content: "Today was an amazing day exploring the Eiffel Tower and enjoying French cuisine."
+  ))
 }

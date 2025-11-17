@@ -16,8 +16,6 @@
  *
  * TODO Items:
  * - Implement handleSort() for sorting journals by date/title
- * - Replace sample journal cards with real data from Parse database
- * - Add loading state while fetching journals from server
  * - Add empty state when no journals exist
  */
 

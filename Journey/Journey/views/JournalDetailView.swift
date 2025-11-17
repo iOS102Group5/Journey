@@ -12,9 +12,9 @@ struct JournalDetailView: View {
   let journal: Journal
   let onEdit: () -> Void
   let onDelete: () -> Void
-
+  
   @State private var showDeleteAlert = false
-
+  
   var body: some View {
     NavigationStack {
       ScrollView {
@@ -59,30 +59,28 @@ struct JournalDetailView: View {
             }
             .frame(height: 350)
             .clipped()
-
+            
             /* gradient overlay for text readability */
             LinearGradient(
               colors: [Color.clear, Color.black.opacity(0.7)],
               startPoint: .top,
               endPoint: .bottom
             )
-
+            
             /* title and metadata overlay */
             VStack(alignment: .leading, spacing: AppSpacing.small) {
               Text(journal.title ?? "Untitled")
                 .font(.system(size: AppFontSize.headerLarge, weight: .bold))
                 .foregroundColor(.white)
-
+              
               HStack(spacing: AppSpacing.medium) {
-                if let date = journal.createdAt {
-                  HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                    Text(date, style: .date)
-                  }
-                  .font(.system(size: AppFontSize.caption))
-                  .foregroundColor(.white.opacity(0.9))
+                HStack(spacing: 4) {
+                  Image(systemName: "calendar")
+                  Text(journal.createdAt, style: .date)
                 }
-
+                .font(.system(size: AppFontSize.caption))
+                .foregroundColor(.white.opacity(0.9))
+                
                 if let location = journal.location {
                   HStack(spacing: 4) {
                     Image(systemName: "location.fill")
@@ -96,16 +94,16 @@ struct JournalDetailView: View {
             .padding(AppSpacing.medium)
           }
           .frame(maxWidth: .infinity)
-
+          
           VStack(alignment: .leading, spacing: AppSpacing.medium) {
-
+            
             /* content */
             if let content = journal.content {
               Text(content)
                 .font(.system(size: AppFontSize.body))
                 .foregroundColor(.primary)
             }
-
+            
             /* map view */
             if journal.location != nil {
               MapView(locationName: journal.location)
@@ -131,7 +129,7 @@ struct JournalDetailView: View {
               .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
           }
         }
-
+        
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: {
             showDeleteAlert = true
