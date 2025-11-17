@@ -197,60 +197,57 @@ struct JournalEditorView: View {
               .cornerRadius(8)
             }
             
-            /* journal content */
+            /* journal content - canvas style */
             VStack(alignment: .leading, spacing: AppSpacing.small) {
               Text("Journal Entry")
                 .font(.system(size: AppFontSize.body))
                 .fontWeight(.semibold)
               ZStack(alignment: .topLeading) {
                 TextEditor(text: $content)
-                  .frame(minHeight: 200)
-                  .padding(AppSpacing.small)
-                  .background(Color(.systemGray6))
-                  .cornerRadius(8)
-                  .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                      .stroke(Color(.systemGray4), lineWidth: 1)
-                  )
+                  .frame(minHeight: 300)
+                  .scrollContentBackground(.hidden)
+                  .background(Color.clear)
+                  .font(.system(size: 16, design: .default))
 
                 /* placeholder */
                 if content.isEmpty {
-                  Text("Write your journal entry here...")
+                  Text("Start writing your thoughts...")
                     .foregroundColor(Color(.placeholderText))
-                    .padding(.horizontal, AppSpacing.small + 5)
-                    .padding(.vertical, AppSpacing.small + 8)
+                    .font(.system(size: 16))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 8)
                     .allowsHitTesting(false)
                 }
               }
             }
-            
-            /* action buttons */
-            if isEditing {
-              HStack(spacing: AppSpacing.medium) {
-                /* delete button */
-                Button(action: {
-                  showDeleteAlert = true
-                }) {
-                  HStack {
-                    Image(systemName: "trash.fill")
-                      .font(.system(size: 16))
-                    Text("Delete")
-                      .fontWeight(.semibold)
-                  }
-                  .foregroundColor(.white)
-                  .padding(AppSpacing.small)
-                  .frame(maxWidth: .infinity)
-                  .background(Color.red)
-                  .cornerRadius(10)
-                }
 
-                /* save button */
-                GradientButton(text: "Save", icon: "checkmark", fullWidth: true, action: handleSave)
-              }
-            } else {
-              /* just save button for new journals */
-              GradientButton(text: "Create Journal", icon: "plus", fullWidth: true, action: handleSave)
-            }
+//            /* action buttons */
+//            if isEditing {
+//              HStack(spacing: AppSpacing.medium) {
+//                /* delete button */
+//                Button(action: {
+//                  showDeleteAlert = true
+//                }) {
+//                  HStack {
+//                    Image(systemName: "trash.fill")
+//                      .font(.system(size: 16))
+//                    Text("Delete")
+//                      .fontWeight(.semibold)
+//                  }
+//                  .foregroundColor(.white)
+//                  .padding(AppSpacing.small)
+//                  .frame(maxWidth: .infinity)
+//                  .background(Color.red)
+//                  .cornerRadius(10)
+//                }
+//
+//                /* save button */
+//                GradientButton(text: "Save", icon: "checkmark", fullWidth: true, action: handleSave)
+//              }
+//            } else {
+//              /* just save button for new journals */
+//              GradientButton(text: "Create Journal", icon: "plus", fullWidth: true, action: handleSave)
+//            }
           }
           .padding(.horizontal, AppSpacing.medium)
         }
@@ -270,6 +267,30 @@ struct JournalEditorView: View {
             Text("Cancel")
           }
           .foregroundColor(.blue)
+        }
+      }
+
+      /* delete button - only show when editing */
+      if isEditing {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button(action: {
+            showDeleteAlert = true
+          }) {
+            Image(systemName: "trash")
+              .font(.system(size: 18))
+              .foregroundColor(.red)
+          }
+        }
+      }
+
+      /* save button */
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Button(action: {
+          handleSave()
+        }) {
+          Image(systemName: "square.and.arrow.down")
+            .font(.system(size: 18))
+            .foregroundColor(.blue)
         }
       }
     }
