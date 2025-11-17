@@ -23,7 +23,7 @@ struct JournalCard: View {
       /* background image layer */
       Group {
         if let imageString = journal.thumbnailImage {
-          /* check if it's a url or local asset */
+          /* check if it's a url or local file */
           if imageString.hasPrefix("http://") || imageString.hasPrefix("https://") {
             /* remote url - use asyncimage */
             AsyncImage(url: URL(string: imageString)) { phase in
@@ -53,10 +53,20 @@ struct JournalCard: View {
               }
             }
           } else {
-            /* local asset name */
-            Image(imageString)
-              .resizable()
-              .scaledToFill()
+            /* local file - load from ImageManager */
+            if let uiImage = ImageManager.shared.loadImage(filename: imageString) {
+              Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+            } else {
+              /* fallback if image not found */
+              Color(.systemGray5)
+                .overlay(
+                  Image(systemName: "photo.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(.white.opacity(0.5))
+                )
+            }
           }
         } else {
           /* placeholder background */
@@ -91,16 +101,14 @@ struct JournalCard: View {
           .lineLimit(1)
         /* calendar and location details*/
         HStack(spacing: 12) {
-          /* if createdAt is defined, render it */
-          if let createdAt = journal.createdAt {
-            HStack(spacing: 4) {
-              Image(systemName: "calendar")
-                .font(.system(size: 13))
-              Text(createdAt, style: .date)
-                .font(.system(size: 13))
-            }
+          /* render journal date */
+          HStack(spacing: 4) {
+            Image(systemName: "calendar")
+              .font(.system(size: 13))
+            Text(journal.createdAt, style: .date)
+              .font(.system(size: 13))
           }
-          /* if location is defined, render it */
+          /* render journal location if applicable */
           if let location = journal.location {
             HStack(spacing: 4) {
               Image(systemName: "location.fill")

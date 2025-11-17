@@ -12,7 +12,7 @@ struct JournalDetailView: View {
   let journal: Journal
   let onEdit: () -> Void
   let onDelete: () -> Void
-
+  
   @State private var showDeleteAlert = false
   @State private var isReadingMode = false
 
@@ -31,8 +31,9 @@ struct JournalDetailView: View {
     return max(1, Int(ceil(Double(wordCount) / 225.0)))
   }
 
+  
   var body: some View {
-    NavigationStack {
+    NavigationView {
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
           /* reading mode title (shown when hero is hidden) */
@@ -43,15 +44,20 @@ struct JournalDetailView: View {
                 .foregroundColor(.primary)
 
               HStack(spacing: AppSpacing.medium) {
-                if let date = journal.createdAt {
-                  HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                    Text(date, style: .date)
-                  }
-                  .font(.system(size: AppFontSize.caption))
-                  .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                  Image(systemName: "calendar")
+                  Text(journal.createdAt, style: .date)
                 }
-
+                .font(.system(size: AppFontSize.caption))
+                .foregroundColor(.secondary)
+//                if let date = journal.createdAt {
+//                  HStack(spacing: 4) {
+//                    Image(systemName: "calendar")
+//                    Text(date, style: .date)
+//                  }
+//                  .font(.system(size: AppFontSize.caption))
+//                  .foregroundColor(.secondary)
+//                }
                 if let location = journal.location {
                   HStack(spacing: 4) {
                     Image(systemName: "location.fill")
@@ -72,25 +78,44 @@ struct JournalDetailView: View {
             ZStack(alignment: .bottomLeading) {
             /* background image */
             Group {
-              if let imageUrl = journal.thumbnailImage {
-                AsyncImage(url: URL(string: imageUrl)) { phase in
-                  switch phase {
-                  case .success(let image):
-                    image
+              if let imageString = journal.thumbnailImage {
+                /* check if it's a url or local file */
+                if imageString.hasPrefix("http://") || imageString.hasPrefix("https://") {
+                  /* remote url */
+                  AsyncImage(url: URL(string: imageString)) { phase in
+                    switch phase {
+                    case .success(let image):
+                      image
+                        .resizable()
+                        .scaledToFill()
+                    case .empty:
+                      Color(.systemGray5)
+                        .overlay(ProgressView())
+                    case .failure:
+                      Color(.systemGray5)
+                        .overlay(
+                          Image(systemName: "photo.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.secondary)
+                        )
+                    @unknown default:
+                      Color(.systemGray5)
+                    }
+                  }
+                } else {
+                  /* local file - load from ImageManager */
+                  if let uiImage = ImageManager.shared.loadImage(filename: imageString) {
+                    Image(uiImage: uiImage)
                       .resizable()
                       .scaledToFill()
-                  case .empty:
-                    Color(.systemGray5)
-                      .overlay(ProgressView())
-                  case .failure:
+                  } else {
+                    /* fallback if image not found */
                     Color(.systemGray5)
                       .overlay(
                         Image(systemName: "photo.fill")
                           .font(.system(size: 40))
                           .foregroundColor(.secondary)
                       )
-                  @unknown default:
-                    Color(.systemGray5)
                   }
                 }
               } else {
@@ -106,32 +131,30 @@ struct JournalDetailView: View {
                 )
               }
             }
-            .frame(height: 350)
+            .frame(height: 280)
             .clipped()
-
+            
             /* gradient overlay for text readability */
             LinearGradient(
               colors: [Color.clear, Color.black.opacity(0.7)],
               startPoint: .top,
               endPoint: .bottom
             )
-
+            
             /* title and metadata overlay */
             VStack(alignment: .leading, spacing: AppSpacing.small) {
               Text(journal.title ?? "Untitled")
                 .font(.system(size: AppFontSize.headerLarge, weight: .bold))
                 .foregroundColor(.white)
-
+              
               HStack(spacing: AppSpacing.medium) {
-                if let date = journal.createdAt {
-                  HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                    Text(date, style: .date)
-                  }
-                  .font(.system(size: AppFontSize.caption))
-                  .foregroundColor(.white.opacity(0.9))
+                HStack(spacing: 4) {
+                  Image(systemName: "calendar")
+                  Text(journal.createdAt, style: .date)
                 }
-
+                .font(.system(size: AppFontSize.caption))
+                .foregroundColor(.white.opacity(0.9))
+                
                 if let location = journal.location {
                   HStack(spacing: 4) {
                     Image(systemName: "location.fill")
@@ -195,7 +218,17 @@ struct JournalDetailView: View {
         }
       }
       .ignoresSafeArea(edges: isReadingMode ? [] : .top)
+      // .navigationBarTitleDisplayMode(.inline)
       .toolbar {
+//        ToolbarItem(placement: .navigationBarLeading) {
+//          Button(action: {
+//            dismiss()
+//          }) {
+//            Image(systemName: "xmark.circle.fill")
+//              .font(.system(size: 24))
+//              .foregroundColor(.secondary)
+//          }
+//        }
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: {
             withAnimation(.spring(response: 0.3)) {
@@ -205,8 +238,6 @@ struct JournalDetailView: View {
             Image(systemName: isReadingMode ? "book.fill" : "book")
               .font(.system(size: 18))
               .foregroundColor(.primary)
-              .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
-              .shadow(color: .white.opacity(0.5), radius: 3, x: 0, y: 1)
           }
         }
 
@@ -247,5 +278,6 @@ struct JournalDetailView: View {
         Text("Are you sure you want to delete this journal? This action cannot be undone.")
       }
     }
+    .navigationViewStyle(.stack)
   }
 }
