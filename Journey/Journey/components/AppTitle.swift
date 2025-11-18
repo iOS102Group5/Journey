@@ -26,8 +26,16 @@ struct AppTitle: View {
 //          .clipShape(RoundedRectangle(cornerRadius: 8))
       }
       Text("\(text)")
-        .font(.system(size: AppFontSize.headerLarge))
+        .font(AppFonts.headerLarge)
         .foregroundColor(.white)
     }
   }
+}
+
+#Preview {
+  VStack {
+    AppTitle(text: "Journey", showIcon: true)
+  }
+  .background(AppGradients.primary)
+  .frame(width: .infinity, height: .infinity)
 }

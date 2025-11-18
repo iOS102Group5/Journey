@@ -5,21 +5,23 @@ struct ProfileView: View {
   // Initial values and callbacks
   let onSave: (String, String, String, UIImage?) -> Void
   let onCancel: () -> Void
-  
+
   private let initialName: String
   private let initialEmail: String
   private let initialBio: String
   private let initialImage: UIImage?
-  
+
   // Editable state
   @State private var name: String
   @State private var email: String
   @State private var bio: String
-  
+
   @State private var selectedItem: PhotosPickerItem? = nil
   @State private var image: UIImage? = nil
-  
+
   @Environment(\.dismiss) private var dismiss
+
+  private let profileManager = ProfileDataManager.shared
   
   init(initialName: String = "",
        initialEmail: String = "",
@@ -217,6 +219,14 @@ struct ProfileView: View {
           }
           .disabled(!isEmailValid && !email.isEmpty)
         }
+      }
+      .onAppear {
+        // Load profile data when view appears
+        let loaded = profileManager.loadProfile()
+        name = loaded.info.name
+        email = loaded.info.email
+        bio = loaded.info.bio
+        image = loaded.image
       }
       .onChange(of: selectedItem) { _, newItem in
         guard let newItem else { return }
