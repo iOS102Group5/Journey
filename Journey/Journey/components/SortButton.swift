@@ -14,9 +14,9 @@ struct SortButton: View {
     Button(action: action) {
       Image(systemName: "slider.horizontal.3")
         .font(.system(size: 20))
-        .foregroundColor(.blue)
+        .foregroundColor(.white)
         .padding(AppSpacing.small)
-        .background(Color(.systemGray6))
+        .background(AppGradients.primary)
         .cornerRadius(8)
     }
   }

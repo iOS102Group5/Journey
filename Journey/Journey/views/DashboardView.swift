@@ -94,7 +94,22 @@ struct DashboardView: View {
   
   var body: some View {
     NavigationStack {
-      AppHeader(text: "Journey", showIcon: true, paddingStyle: .both)
+      AppHeader(
+        text: "Journey",
+        showIcon: true,
+        paddingStyle: .bottom,
+        trailingButton: {
+          AnyView(
+            Button {
+              showingProfile = true
+            } label: {
+              Image(systemName: "person.circle")
+                .font(.system(size: AppFontSize.headerLarge))
+                .foregroundColor(.white)
+            }
+          )
+        }
+      )
       VStack(spacing: AppSpacing.medium) {
         SearchBar(
           searchText: $searchText,
@@ -115,15 +130,6 @@ struct DashboardView: View {
         profileEmail = loaded.info.email
         profileBio = loaded.info.bio
         profileImage = loaded.image
-      }
-      .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Button {
-            showingProfile = true
-          } label: {
-            Image(systemName: "person.circle")
-          }
-        }
       }
       .sheet(isPresented: $showDetailSheet) {
         loadJournals()

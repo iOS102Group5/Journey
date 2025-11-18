@@ -40,21 +40,49 @@ struct PhotoUploadCard: View {
             .frame(height: 200)
             .frame(maxWidth: .infinity)
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+              RoundedRectangle(cornerRadius: 16)
+                .stroke(
+                  LinearGradient(
+                    colors: [AppColors.primaryGradientStart, AppColors.primaryGradientEnd],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                  ),
+                  lineWidth: 3
+                )
+            )
         } else {
           /* show placeholder when no image is selected */
           RoundedRectangle(cornerRadius: 16)
-            .fill(Color(.systemGray5)) /* light gray background */
+            .fill(
+              LinearGradient(
+                colors: [AppColors.primaryGradientStart.opacity(0.1), AppColors.primaryGradientEnd.opacity(0.1)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+              )
+            )
             .frame(height: 200)
             .frame(maxWidth: .infinity)
             .overlay(
               VStack(spacing: 12) {
                 Image(systemName: "photo.badge.plus") /* SF Symbol icon */
                   .font(.system(size: 50))
-                  .foregroundColor(.secondary)
+                  .foregroundColor(AppColors.primaryGradientStart)
                 Text("Tap to add photo")
                   .font(.system(size: AppFontSize.body))
-                  .foregroundColor(.secondary)
+                  .foregroundColor(.primary)
               }
+            )
+            .overlay(
+              RoundedRectangle(cornerRadius: 16)
+                .stroke(
+                  LinearGradient(
+                    colors: [AppColors.primaryGradientStart.opacity(0.3), AppColors.primaryGradientEnd.opacity(0.3)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                  ),
+                  lineWidth: 2
+                )
             )
         }
       }
