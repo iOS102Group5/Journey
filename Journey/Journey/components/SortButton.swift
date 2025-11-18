@@ -8,22 +8,42 @@
 import SwiftUI
 
 struct SortButton: View {
-  let action: () -> Void
+  @Binding var sortOption: JournalSortOption
+  let onSortChange: () -> Void
 
   var body: some View {
-    Button(action: action) {
-      Image(systemName: "slider.horizontal.3")
-        .font(.system(size: 20))
-        .foregroundColor(.white)
-        .padding(AppSpacing.small)
+    Menu {
+      ForEach(JournalSortOption.allCases, id: \.self) { option in
+        Button {
+          sortOption = option
+          onSortChange()
+        } label: {
+          HStack {
+            Text(option.label)
+            if option == sortOption {
+              Image(systemName: "checkmark")
+            }
+          }
+        }
         .background(AppGradients.primary)
-        .cornerRadius(8)
-    }
+      }
+    } label: {
+      HStack(spacing: 4) {
+        Image(systemName: "slider.horizontal.3")
+          .font(.system(size: 20))
+        Text(sortOption.shortLabel)
+          .font(.subheadline)
+      }
+      .foregroundColor(.blue)
+      .padding(AppSpacing.small)
+      .cardInputStyle()
+     }
   }
 }
 
 #Preview {
-  SortButton(action: {
-    print("Sort tapped")
-  })
+  SortButton(
+    sortOption: .constant(.dateDescending),
+    onSortChange: { }
+  )
 }

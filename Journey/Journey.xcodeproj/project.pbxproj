@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		089AB07C2ECBCB4400BA2AE4 /* ParseLiveQuery in Frameworks */ = {isa = PBXBuildFile; productRef = 089AB07B2ECBCB4400BA2AE4 /* ParseLiveQuery */; };
+		089AB07E2ECBCB4400BA2AE4 /* ParseObjC in Frameworks */ = {isa = PBXBuildFile; productRef = 089AB07D2ECBCB4400BA2AE4 /* ParseObjC */; };
 		3DD5559F2EBC3E4400F8C4E2 /* JourneyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD5559E2EBC3E4400F8C4E2 /* JourneyApp.swift */; };
 		3DD555A12EBC3E4400F8C4E2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD555A02EBC3E4400F8C4E2 /* ContentView.swift */; };
 		3DD555A32EBC3E4900F8C4E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3DD555A22EBC3E4900F8C4E2 /* Assets.xcassets */; };
@@ -46,6 +48,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				089AB07E2ECBCB4400BA2AE4 /* ParseObjC in Frameworks */,
+				089AB07C2ECBCB4400BA2AE4 /* ParseLiveQuery in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,6 +150,7 @@
 			);
 			mainGroup = 3DD555922EBC3E4300F8C4E2;
 			packageReferences = (
+				089AB07A2ECBCB4400BA2AE4 /* XCRemoteSwiftPackageReference "Parse-SDK-iOS-OSX" */,
 			);
 			productRefGroup = 3DD5559C2EBC3E4400F8C4E2 /* Products */;
 			projectDirPath = "";
@@ -386,6 +391,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		089AB07A2ECBCB4400BA2AE4 /* XCRemoteSwiftPackageReference "Parse-SDK-iOS-OSX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/parse-community/Parse-SDK-iOS-OSX";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		089AB07B2ECBCB4400BA2AE4 /* ParseLiveQuery */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 089AB07A2ECBCB4400BA2AE4 /* XCRemoteSwiftPackageReference "Parse-SDK-iOS-OSX" */;
+			productName = ParseLiveQuery;
+		};
+		089AB07D2ECBCB4400BA2AE4 /* ParseObjC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 089AB07A2ECBCB4400BA2AE4 /* XCRemoteSwiftPackageReference "Parse-SDK-iOS-OSX" */;
+			productName = ParseObjC;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3DD555932EBC3E4300F8C4E2 /* Project object */;
 }
