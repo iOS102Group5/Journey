@@ -18,8 +18,9 @@ struct SearchBar: View {
     HStack(spacing: AppSpacing.small) {
       TextField("Search for journals", text: $searchText)
         .padding(AppSpacing.small)
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .cardInputStyle()
+//        .background(Color(.systemGray6))
+//        .cornerRadius(8)
         .onChange(of: searchText) { oldValue, newValue in
           searchTask?.cancel()
           searchTask = Task {

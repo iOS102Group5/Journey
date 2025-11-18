@@ -159,6 +159,39 @@ struct HeaderStyle: ViewModifier {
 }
 
 /**
+ * MARK: - Card Input Style
+ *
+ * ViewModifier for text inputs with card-based design:
+ * - White background with subtle shadow
+ * - Rounded corners (12pt)
+ * - Thin border for definition
+ *
+ * Usage:
+ *   TextField("Name", text: $name)
+ *     .padding(AppSpacing.small)
+ *     .cardInputStyle()
+ */
+struct CardInputStyle: ViewModifier {
+  var isError: Bool = false
+
+  func body(content: Content) -> some View {
+    content
+      .background(
+        RoundedRectangle(cornerRadius: 8)
+          .fill(Color(.systemBackground))
+          .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+      )
+      .overlay(
+        RoundedRectangle(cornerRadius: 8)
+          .stroke(
+            isError ? Color.red : Color(.systemGray4),
+            lineWidth: isError ? 2 : 1
+          )
+      )
+  }
+}
+
+/**
  * Extension to View for convenient access to custom modifiers
  *
  * This allows you to call .headerStyle() on any SwiftUI view:
@@ -170,5 +203,11 @@ struct HeaderStyle: ViewModifier {
 extension View {
   func headerStyle() -> some View {
     modifier(HeaderStyle())
+  }
+
+  /// Applies card input styling with optional error state
+  /// - Parameter isError: Whether to show error styling (red border)
+  func cardInputStyle(isError: Bool = false) -> some View {
+    modifier(CardInputStyle(isError: isError))
   }
 }

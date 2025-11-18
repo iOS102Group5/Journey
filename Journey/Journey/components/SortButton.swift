@@ -25,6 +25,7 @@ struct SortButton: View {
             }
           }
         }
+        .background(AppGradients.primary)
       }
     } label: {
       HStack(spacing: 4) {
@@ -35,9 +36,8 @@ struct SortButton: View {
       }
       .foregroundColor(.blue)
       .padding(AppSpacing.small)
-      .background(Color(.systemGray6))
-      .cornerRadius(8)
-    }
+      .cardInputStyle()
+     }
   }
 }
 
