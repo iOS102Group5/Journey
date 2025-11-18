@@ -17,27 +17,26 @@ struct AppHeader: View {
   let text: String
   let showIcon: Bool
   let paddingStyle: HeaderPaddingStyle
+  let trailingButton: (() -> AnyView)?
 
-  init(text: String, showIcon: Bool = false, paddingStyle: HeaderPaddingStyle = .both) {
+  init(text: String, showIcon: Bool = false, paddingStyle: HeaderPaddingStyle = .both, trailingButton: (() -> AnyView)? = nil) {
     self.text = text
     self.showIcon = showIcon
     self.paddingStyle = paddingStyle
+    self.trailingButton = trailingButton
   }
 
   var body: some View {
     HStack(spacing: AppSpacing.small) {
-      if showIcon {
-        /* app icon */
-        Image("favicon")
-          .resizable()
-          .scaledToFit()
-          .frame(width: 40, height: 40)
-          .clipShape(RoundedRectangle(cornerRadius: 8))
+      Spacer()
+      AppTitle(text: text, showIcon: showIcon)
+      Spacer()
+    }
+    .overlay(alignment: .trailing) {
+      if let trailingButton = trailingButton {
+        trailingButton()
+          .padding(.trailing, AppSpacing.medium)
       }
-      Text("\(text)")
-//        .font(AppFonts.headerLarge)
-        .font(.system(size: AppFontSize.headerLarge))
-        .foregroundColor(.white)
     }
     .frame(maxWidth: .infinity)
     .padding(.top, paddingStyle == .both ? AppSpacing.headerPaddingVertical : 0)

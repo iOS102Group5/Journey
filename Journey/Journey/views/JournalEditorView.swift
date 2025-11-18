@@ -148,8 +148,7 @@ struct JournalEditorView: View {
                 .fontWeight(.semibold)
               TextField("Enter journal title", text: $title)
                 .padding(AppSpacing.small)
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+                .cardInputStyle()
             }
             
             /* date field */
@@ -168,12 +167,11 @@ struct JournalEditorView: View {
                     .foregroundColor(.blue)
                 }
                 .padding(AppSpacing.small)
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+                .cardInputStyle()
               }
               if showDatePicker {
                 DatePicker("", selection: $selectedDate, displayedComponents: .date)
-                  .datePickerStyle(.graphical)
+                  .datePickerStyle(.wheel)
               }
             }
             
@@ -193,8 +191,7 @@ struct JournalEditorView: View {
                 }
               }
               .padding(AppSpacing.small)
-              .background(Color(.systemGray6))
-              .cornerRadius(8)
+              .cardInputStyle()
             }
             
             /* journal content - canvas style */
