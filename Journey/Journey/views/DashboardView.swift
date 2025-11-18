@@ -28,8 +28,14 @@ struct DashboardView: View {
   @State private var selectedJournal: Journal?
   @State private var journals: [Journal] = []
   @State private var filteredJournals: [Journal] = []
+  @State private var showingProfile = false
+  @State private var profileName: String = ""
+  @State private var profileEmail: String = ""
+  @State private var profileBio: String = ""
+  @State private var profileImage: UIImage? = nil
 
   private let dataManager = JournalDataManager.shared
+  private let profileManager = ProfileDataManager.shared
 
   private func handleSort() {
     /* TODO */
@@ -104,6 +110,20 @@ struct DashboardView: View {
       .frame(maxHeight: .infinity)
       .onAppear {
         loadJournals()
+        let loaded = profileManager.loadProfile()
+        profileName = loaded.info.name
+        profileEmail = loaded.info.email
+        profileBio = loaded.info.bio
+        profileImage = loaded.image
+      }
+      .toolbar {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button {
+            showingProfile = true
+          } label: {
+            Image(systemName: "person.circle")
+          }
+        }
       }
       .sheet(isPresented: $showDetailSheet) {
         loadJournals()
@@ -115,6 +135,25 @@ struct DashboardView: View {
             onDelete: handleDelete
           )
         }
+      }
+      .sheet(isPresented: $showingProfile) {
+        ProfileView(
+          initialName: profileName,
+          initialEmail: profileEmail,
+          initialBio: profileBio,
+          initialImage: profileImage,
+          onSave: { name, email, bio, image in
+            profileManager.saveProfile(name: name, email: email, bio: bio, image: image)
+            profileName = name
+            profileEmail = email
+            profileBio = bio
+            profileImage = image
+            showingProfile = false
+          },
+          onCancel: {
+            showingProfile = false
+          }
+        )
       }
       .navigationDestination(isPresented: $navigateToEditor) {
         JournalEditorView(journal: selectedJournal, onSave: { _ in
